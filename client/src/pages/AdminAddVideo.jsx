@@ -1,19 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Loader, Wand2 } from 'lucide-react';
-import { fetchYouTubeData, createVideo, updateVideo, getVideo, getCategories, isLoggedIn } from '../utils/api';
+import { fetchYouTubeData, createVideo, updateVideo, getVideo, getCategories, createCategory, isLoggedIn } from '../utils/api';
 
 export default function AdminAddVideo() {
   const { id } = useParams(); // edit mode if id exists
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const [fetching, setFetching] = useState(false);
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [savingCategory, setSavingCategory] = useState(false);
   const [saving, setSaving] = useState(false);
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [form, setForm] = useState({
     youtube_id: '', youtube_url: '', title: '', description: '',
     thumbnail: '', duration: '', channel_name: '',
-    category: '', tags: '[]', is_featured: false, status: 'published',
+    category: '', is_featured: false, status: 'published',
   });
 
   useEffect(() => {
@@ -28,7 +31,7 @@ export default function AdminAddVideo() {
           title: video.title, description: video.description || '',
           thumbnail: video.thumbnail || '', duration: video.duration || '',
           channel_name: video.channel_name || '',
-          category: video.category || '', tags: video.tags || '[]',
+          category: video.category || '',
           is_featured: video.is_featured, status: video.status,
         });
         setYoutubeUrl(video.youtube_url);
@@ -53,6 +56,21 @@ export default function AdminAddVideo() {
       alert('Failed to fetch: ' + err.message);
     }
     setFetching(false);
+  };
+
+  const handleAddNewCategory = async () => {
+    if (!newCategoryName.trim()) return;
+    setSavingCategory(true);
+    try {
+      const newCat = await createCategory({ name: newCategoryName.trim(), icon: '📁' });
+      setCategories(prev => [...prev, newCat]);
+      updateForm('category', newCat.id);
+      setIsAddingCategory(false);
+      setNewCategoryName('');
+    } catch (err) {
+      alert('Failed to create category: ' + err.message);
+    }
+    setSavingCategory(false);
   };
 
   const handleSubmit = async (e) => {
@@ -138,14 +156,34 @@ export default function AdminAddVideo() {
             {/* Row: Category + Duration */}
             <div className="form-row">
               <div className="form-group">
-                <label>Category</label>
-                <select className="form-input" value={form.category}
-                  onChange={e => updateForm('category', e.target.value)} id="video-category">
-                  <option value="">Select Category</option>
-                  {categories.map(cat => (
-                    <option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>
-                  ))}
-                </select>
+                <label style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  Category
+                  {!isAddingCategory && (
+                    <span style={{ color: 'var(--color-primary)', cursor: 'pointer', fontSize: 12, fontWeight: 600 }} onClick={() => setIsAddingCategory(true)}>
+                      + Add New
+                    </span>
+                  )}
+                </label>
+                {isAddingCategory ? (
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input className="form-input" type="text" placeholder="New Category Name"
+                      value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} />
+                    <button type="button" className="btn btn-primary btn-sm" onClick={handleAddNewCategory} disabled={savingCategory}>
+                      Save
+                    </button>
+                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => setIsAddingCategory(false)}>
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <select className="form-input" value={form.category}
+                    onChange={e => updateForm('category', e.target.value)} id="video-category">
+                    <option value="">Select Category</option>
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>
+                    ))}
+                  </select>
+                )}
               </div>
               <div className="form-group">
                 <label>Duration</label>
@@ -154,18 +192,11 @@ export default function AdminAddVideo() {
               </div>
             </div>
 
-            {/* Row: Channel + Tags */}
-            <div className="form-row">
-              <div className="form-group">
-                <label>Channel Name</label>
-                <input className="form-input" type="text" placeholder="Channel name"
-                  value={form.channel_name} onChange={e => updateForm('channel_name', e.target.value)} />
-              </div>
-              <div className="form-group">
-                <label>Tags (JSON array)</label>
-                <input className="form-input" type="text" placeholder='["tag1", "tag2"]'
-                  value={form.tags} onChange={e => updateForm('tags', e.target.value)} />
-              </div>
+            {/* Channel */}
+            <div className="form-group">
+              <label>Channel Name</label>
+              <input className="form-input" type="text" placeholder="Channel name"
+                value={form.channel_name} onChange={e => updateForm('channel_name', e.target.value)} />
             </div>
 
             {/* Thumbnail */}

@@ -552,20 +552,18 @@ input, textarea, select {
   background: var(--gradient-hero);
 }
 
-.hero-content {
+.hero-content-wrapper {
   position: absolute;
-  bottom: var(--space-3xl);
-  left: var(--content-padding);
-  max-width: 600px;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: var(--space-3xl);
   z-index: 2;
 }
 
-@media (min-width: 769px) {
-  .hero-content {
-    left: calc((100% - var(--max-width)) / 2 + var(--content-padding));
-  }
+.hero-content {
+  max-width: 600px;
 }
-
 .hero-badge {
   display: inline-block;
   padding: 4px 12px;

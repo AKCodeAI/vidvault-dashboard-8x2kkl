@@ -36,8 +36,9 @@ export default function HeroCarousel({ videos }) {
             onError={e => { e.target.src = `https://img.youtube.com/vi/${video.youtube_id}/hqdefault.jpg`; }}
           />
           <div className="hero-overlay" />
-          <div className="hero-content">
-            <span className="hero-badge">
+          <div className="hero-content-wrapper container">
+            <div className="hero-content">
+              <span className="hero-badge">
               {video.category_name || '⭐ Featured'}
             </span>
             <h1 className="hero-title">{video.title}</h1>
@@ -60,6 +61,7 @@ export default function HeroCarousel({ videos }) {
                 {isBookmarked(video.id) ? 'Saved' : 'Save'}
               </button>
             </div>
+          </div>
           </div>
         </div>
       ))}
